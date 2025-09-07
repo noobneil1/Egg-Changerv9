@@ -1,0 +1,143 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+
+-- 🥚 Egg & Pets
+local EggData = {
+    ["Zen Egg"] = {"Shiba Inu","Kappa","Tanchozuru","Tanuki","Nihonzaru"},
+    ["Bug Egg"] = {"Caterpillar","Giant Ant","Praying Mantis"},
+    ["Night Egg"] = {"Night Owl","Echo Frog","Frog","Mole","Hedgehog"},
+    ["Mythical Egg"] = {"Red Giant Ant","Squirrel","Brown Mouse","Grey Mouse"},
+    ["Dinosaur Egg"] = {"Brontosaurus","Pterodactyl","Stegosaurus","Triceratops","Raptor"},
+    ["Primal Egg"] = {"Ankylosaurus","Dilophosaurus","Pachycephalosaurus","Iguanodon","Parasaurolophus"},
+    ["Paradise Egg"] = {"Scarlet Macaw","Capybara","Peacock","Ostrich"},
+    ["Anti Egg"] = {"Bee Moth","Tarantula Hawk","Wasp"},
+    ["Gourmet Egg"] = {"Bagel Bunny","Pancake Mole","Sushi Bear","Spaghetti Sloth"},
+    ["Sprout Egg"] = {"Dairy Cow","Jackalope","Seedling","Golem"},
+}
+
+-- 🌈 Colors
+local PetColors = {
+    ["Shiba Inu"] = Color3.fromRGB(255,165,0), ["Kappa"] = Color3.fromRGB(60,180,75),
+    ["Tanchozuru"] = Color3.fromRGB(255,255,255), ["Tanuki"] = Color3.fromRGB(139,69,19),
+    ["Nihonzaru"] = Color3.fromRGB(255,105,180), ["Wasp"] = Color3.fromRGB(255,0,0),
+    ["Tarantula Hawk"] = Color3.fromRGB(255,69,0), ["Bee Moth"] = Color3.fromRGB(255,215,0),
+    ["Peacock"] = Color3.fromRGB(0,153,255), ["Scarlet Macaw"] = Color3.fromRGB(255,36,0),
+    ["Capybara"] = Color3.fromRGB(160,82,45), ["Ostrich"] = Color3.fromRGB(240,240,240),
+    ["Bagel Bunny"] = Color3.fromRGB(222,184,135), ["Pancake Mole"] = Color3.fromRGB(210,180,140),
+    ["Sushi Bear"] = Color3.fromRGB(255,99,71), ["Spaghetti Sloth"] = Color3.fromRGB(255,228,181),
+    ["Dairy Cow"] = Color3.fromRGB(255,255,255), ["Jackalope"] = Color3.fromRGB(160,82,45),
+    ["Seedling"] = Color3.fromRGB(34,139,34), ["Golem"] = Color3.fromRGB(105,105,105),
+}
+
+-- 🎛️ UI
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+local gui = Instance.new("ScreenGui", playerGui)
+gui.Name = "GardenEggUI"
+gui.ResetOnSpawn = false
+
+local autoStopBtn = Instance.new("TextButton", gui)
+autoStopBtn.Size = UDim2.new(0,150,0,50)
+autoStopBtn.Position = UDim2.new(0,20,0,120)
+autoStopBtn.BackgroundColor3 = Color3.fromRGB(34,139,34)
+autoStopBtn.Font = Enum.Font.GothamBold
+autoStopBtn.TextSize = 20
+autoStopBtn.TextColor3 = Color3.new(1,1,1)
+autoStopBtn.Text = "🛑 Auto Stop: OFF"
+local corner = Instance.new("UICorner", autoStopBtn) corner.CornerRadius = UDim.new(0.25,0)
+
+local AutoStop = false
+autoStopBtn.MouseButton1Click:Connect(function()
+    AutoStop = not AutoStop
+    autoStopBtn.Text = AutoStop and "🛑 Auto Stop: ON" or "🛑 Auto Stop: OFF"
+end)
+
+-- 🎰 Shuffle Function
+local function shufflePet(label, pets)
+    local shuffleTime, interval, elapsed = 1, 0.1, 0
+    while elapsed < shuffleTime do
+        local rnd = pets[math.random(#pets)]
+        label.Text = rnd
+        label.TextColor3 = PetColors[rnd] or Color3.fromRGB(255,255,255)
+        task.wait(interval)
+        elapsed += interval
+    end
+    local finalPet = pets[math.random(#pets)]
+    label.Text = finalPet
+    label.TextColor3 = PetColors[finalPet] or Color3.fromRGB(255,255,255)
+    label.TextTransparency = 1
+    TweenService:Create(label,TweenInfo.new(0.5),{TextTransparency=0}):Play()
+end
+
+-- 🏷️ Attach Label
+local function attachEggLabel(egg)
+    if not EggData[egg.Name] then return end
+    local part = egg:FindFirstChildWhichIsA("BasePart") or egg.PrimaryPart
+    if not part then return end
+
+    local bb = Instance.new("BillboardGui", egg)
+    bb.Name = "EggBillboard"
+    bb.Size = UDim2.new(0,220,0,60)
+    bb.Adornee = part
+    bb.AlwaysOnTop = true
+    bb.StudsOffset = Vector3.new(0,3.5,0)
+
+    -- 🐾 Pet name label (start with random)
+    local petLabel = Instance.new("TextLabel", bb)
+    petLabel.Size = UDim2.new(1,0,0.5,0)
+    petLabel.BackgroundTransparency = 1
+    petLabel.Font = Enum.Font.GothamBold
+    petLabel.TextSize = 20
+    local initialPet = EggData[egg.Name][math.random(#EggData[egg.Name])]
+    petLabel.Text = initialPet
+    petLabel.TextColor3 = PetColors[initialPet] or Color3.fromRGB(255,255,255)
+
+    -- ⏱ Countdown label
+    local countdownLabel = Instance.new("TextLabel", bb)
+    countdownLabel.Position = UDim2.new(0,0,0.5,0)
+    countdownLabel.Size = UDim2.new(1,0,0.5,0)
+    countdownLabel.BackgroundTransparency = 1
+    countdownLabel.Font = Enum.Font.GothamBlack
+    countdownLabel.TextSize = 22
+    countdownLabel.TextColor3 = Color3.fromRGB(255,255,0)
+
+    local stroke = Instance.new("UIStroke", countdownLabel)
+    stroke.Thickness = 2
+    stroke.Color = Color3.fromRGB(0,0,0)
+
+    countdownLabel.Text = "30s"
+
+    -- Loop countdown
+    task.spawn(function()
+        while bb.Parent do
+            if not AutoStop then
+                for i = 30,1,-1 do
+                    countdownLabel.Text = i.."s"
+                    task.wait(1)
+                    if AutoStop or not bb.Parent then break end
+                end
+                if not AutoStop and bb.Parent then
+                    shufflePet(petLabel, EggData[egg.Name])
+                    countdownLabel.Text = "30s"
+                end
+            else
+                task.wait(1)
+            end
+        end
+    end)
+end
+
+-- 🕵️ Detect eggs
+for _,obj in ipairs(Workspace:GetDescendants()) do
+    if obj:IsA("Model") and EggData[obj.Name] then
+        attachEggLabel(obj)
+    end
+end
+
+Workspace.DescendantAdded:Connect(function(obj)
+    if obj:IsA("Model") and EggData[obj.Name] then
+        task.wait(0.5)
+        attachEggLabel(obj)
+    end
+end)
